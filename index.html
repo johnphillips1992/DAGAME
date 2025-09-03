@@ -75,43 +75,6 @@
         <div class="stats">
             <strong>Moves: <span id="moves">0</span> | Best: <span id="best">--</span></strong>
         </div>
-        <div class="legend">
-            <div class="legend-item">
-                <div class="color-box" style="background: #ffd700;"></div>
-                <span>Player</span>
-            </div>
-            <div class="legend-item">
-                <div class="color-box" style="background: #ff6b6b;"></div>
-                <span>Push Block</span>
-            </div>
-            <div class="legend-item">
-                <div class="color-box" style="background: #4dabf7;"></div>
-                <span>Goal</span>
-            </div>
-            <div class="legend-item">
-                <div class="color-box" style="background: #333;"></div>
-                <span>Wall</span>
-            </div>
-            <div class="legend-item">
-                <div class="color-box" style="background: #00ff00;"></div>
-                <span>Spring (↑)</span>
-            </div>
-            <div class="legend-item">
-                <div class="color-box" style="background: #ff00ff;"></div>
-                <span>Teleport In</span>
-            </div>
-            <div class="legend-item">
-                <div class="color-box" style="background: #ff88ff;"></div>
-                <span>Teleport Out</span>
-            </div>
-            <div class="legend-item">
-                <div class="color-box" style="background: #00ffff;"></div>
-                <span>Ice</span>
-            </div>
-        </div>
-        <div class="stats">
-            ↑↓←→ Move | R: Restart | Springs launch upward | Teleporters transport player & blocks!
-        </div>
     </div>
 
     <script>
@@ -124,6 +87,7 @@
         // Game state
         let moves = 0;
         let gameWon = false;
+        let gameOver = false;
         let bestScore = null;
         
         // Colors
@@ -143,7 +107,7 @@
 
         // Level data - Ice mechanics with teleporters
         const LEVEL = {
-            player: {x: 32, y: 55},
+            player: {x: 50, y: 25},
             walls: createLevelWalls([
                 '################################################################',
                 '#..............................................................#',
@@ -213,8 +177,8 @@
             pushBlocks: [{x: 30, y: 50}, {x: 34, y: 50}, {x: 10, y: 35}, {x: 54, y: 35}],
             goals: [{x: 10, y: 15}, {x: 54, y: 5}, {x: 10, y: 45}, {x: 54, y: 55}],
             springs: [{x: 32, y: 40}],
-            teleportersIn: [{x: 5, y: 30}, {x: 35, y: 12 },{x: 58, y: 30}],
-            teleportersOut: [{x: 5, y: 12}, {x: 35, y: 30 }, {x: 58, y: 12}],
+            teleportersIn: [{x: 5, y: 30}, {x: 26, y: 46}, {x: 32, y: 30}, {x: 35, y: 12 },{x: 58, y: 30}],
+            teleportersOut: [{x: 5, y: 12}, {x: 26, y: 56}, {x: 32, y: 12}, {x: 35, y: 30 }, {x: 58, y: 12}],
             ice: []
         };
 
@@ -244,6 +208,7 @@
             
             moves = 0;
             gameWon = false;
+            gameOver = false;
             updateDisplay();
             draw();
         }
@@ -313,6 +278,18 @@
                     ctx.fillText(`Best: ${bestScore}`, 32, 42);
                 }
                 ctx.fillText('Press R to play again', 32, 48);
+            }
+
+            if (gameOver) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#ff0000';
+                ctx.font = '8px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText('GAME OVER', 32, 30);
+                ctx.font = '4px monospace';
+                ctx.fillText('Too many moves!', 32, 36);
+                ctx.fillText('Press R to restart', 32, 42);
             }
         }
 
@@ -406,7 +383,7 @@
         }
 
         function movePlayer(dx, dy) {
-            if (gameWon) return;
+            if (gameWon || gameOver) return;
             
             const newX = player.x + dx;
             const newY = player.y + dy;
@@ -444,7 +421,9 @@
             }
             
             moves++;
-            
+            if (moves >= 500) {
+                gameOver = true;
+            }
             // Process special tiles for player (springs and teleporters)
             processSpecialTiles(player, true);
             
